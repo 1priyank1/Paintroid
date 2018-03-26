@@ -19,235 +19,160 @@
 
 package org.catrobat.paintroid.test.junit.command;
 
-import java.io.File;
+import android.graphics.Bitmap;
 
 import org.catrobat.paintroid.command.implementation.BaseCommand;
 import org.catrobat.paintroid.command.implementation.ResizeCommand;
-import org.catrobat.paintroid.test.utils.PrivateAccess;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import java.io.File;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ResizeCommandTest extends CommandTestSetup {
 
-	private int mResizeCoordinateXLeft;
-	private int mResizeCoordinateYTop;
-	private int mResizeCoordinateXRight;
-	private int mResizeCoordinateYBottom;
-	private int mMaximumBitmapResolution;
-	private int mMaximumBitmapResolutionFactor = 4;
+	private static final int MAXIMUM_BITMAP_RESOLUTION_FACTOR = 4;
+
+	private int resizeCoordinateXLeft;
+	private int resizeCoordinateYTop;
+	private int resizeCoordinateXRight;
+	private int resizeCoordinateYBottom;
+	private int maximumBitmapResolution;
 
 	@Override
 	@Before
-	protected void setUp() throws Exception {
+	public void setUp() {
 		super.setUp();
-		mResizeCoordinateXLeft = 0;
-		mResizeCoordinateYTop = 0;
-		mResizeCoordinateXRight = mBitmapUnderTest.getWidth() - 1;
-		mResizeCoordinateYBottom = mBitmapUnderTest.getHeight() - 1;
-		mMaximumBitmapResolution = mBitmapUnderTest.getWidth() * mBitmapUnderTest.getHeight()
-				* mMaximumBitmapResolutionFactor;
-		mCommandUnderTest = new ResizeCommand(mResizeCoordinateXLeft, mResizeCoordinateYTop,
-				mResizeCoordinateXRight, mResizeCoordinateYBottom, mMaximumBitmapResolution);
-		mCommandUnderTestNull = new ResizeCommand(1, 1, 2, 2, mMaximumBitmapResolution);
+		resizeCoordinateXLeft = 0;
+		resizeCoordinateYTop = 0;
+		resizeCoordinateXRight = bitmapUnderTest.getWidth() - 1;
+		resizeCoordinateYBottom = bitmapUnderTest.getHeight() - 1;
+		maximumBitmapResolution = bitmapUnderTest.getWidth() * bitmapUnderTest.getHeight()
+				* MAXIMUM_BITMAP_RESOLUTION_FACTOR;
+		commandUnderTest = new ResizeCommand(resizeCoordinateXLeft, resizeCoordinateYTop,
+				resizeCoordinateXRight, resizeCoordinateYBottom, maximumBitmapResolution);
+		commandUnderTestNull = new ResizeCommand(1, 1, 2, 2, maximumBitmapResolution);
 	}
 
 	@Override
 	@After
-	protected void tearDown() throws Exception {
-		File fileToResizedBitmap = (File) PrivateAccess.getMemberValue(BaseCommand.class, mCommandUnderTest,
-				"mFileToStoredBitmap");
-		if (fileToResizedBitmap != null)
-			fileToResizedBitmap.delete();
+	public void tearDown() {
+		File fileToResizedBitmap = ((BaseCommand) commandUnderTest).fileToStoredBitmap;
+		if (fileToResizedBitmap != null) {
+			assertTrue(fileToResizedBitmap.delete());
+		}
 		super.tearDown();
 	}
 
 	@Test
-	public void testIfBitmapIsCropped() throws InterruptedException, SecurityException, IllegalArgumentException,
-			NoSuchFieldException, IllegalAccessException {
-		int widthOriginal = mBitmapUnderTest.getWidth();
-		int heightOriginal = mBitmapUnderTest.getHeight();
-		mResizeCoordinateXLeft = 1;
-		mResizeCoordinateYTop = 1;
-		mResizeCoordinateXRight = mBitmapUnderTest.getWidth() - 2;
-		mResizeCoordinateYBottom = mBitmapUnderTest.getHeight() - 2;
-		mCommandUnderTest = new ResizeCommand(mResizeCoordinateXLeft, mResizeCoordinateYTop,
-				mResizeCoordinateXRight, mResizeCoordinateYBottom, mMaximumBitmapResolution);
-		mCommandUnderTest.run(mCanvasUnderTest, mCanvasBitmapUnderTest);
-		Thread.sleep(100);
+	public void testIfBitmapIsCropped() {
+		int widthOriginal = bitmapUnderTest.getWidth();
+		int heightOriginal = bitmapUnderTest.getHeight();
+		resizeCoordinateXLeft = 1;
+		resizeCoordinateYTop = 1;
+		resizeCoordinateXRight = bitmapUnderTest.getWidth() - 2;
+		resizeCoordinateYBottom = bitmapUnderTest.getHeight() - 2;
+		commandUnderTest = new ResizeCommand(resizeCoordinateXLeft, resizeCoordinateYTop,
+				resizeCoordinateXRight, resizeCoordinateYBottom, maximumBitmapResolution);
 
-		File fileToCroppedBitmap = (File) PrivateAccess.getMemberValue(BaseCommand.class, mCommandUnderTest,
-				"mFileToStoredBitmap");
-		if (fileToCroppedBitmap == null) {
-			fail("failed to store cropped bitmap");
-		}
+		commandUnderTest.run(canvasUnderTest, layerUnderTest);
 
-		Bitmap croppedBitmap = BitmapFactory.decodeFile(fileToCroppedBitmap.getAbsolutePath());
-		fileToCroppedBitmap.delete();
-		assertEquals("Cropping failed, width not correct ", widthOriginal - mResizeCoordinateXLeft
-				- (widthOriginal - (mResizeCoordinateXRight + 1)), croppedBitmap.getWidth());
-		assertEquals("Cropping failed, height not correct ", heightOriginal - mResizeCoordinateYTop
-				- (widthOriginal - (mResizeCoordinateYBottom + 1)), croppedBitmap.getHeight());
+		Bitmap croppedBitmap = layerUnderTest.getImage();
+		assertEquals("Cropping failed, width not correct ", widthOriginal - resizeCoordinateXLeft
+				- (widthOriginal - (resizeCoordinateXRight + 1)), croppedBitmap.getWidth());
+		assertEquals("Cropping failed, height not correct ", heightOriginal - resizeCoordinateYTop
+				- (widthOriginal - (resizeCoordinateYBottom + 1)), croppedBitmap.getHeight());
 		croppedBitmap.recycle();
-		croppedBitmap = null;
-
 	}
 
 	@Test
-	public void testIfBitmapIsEnlarged() throws InterruptedException, SecurityException, IllegalArgumentException,
-			NoSuchFieldException, IllegalAccessException {
-		int widthOriginal = mBitmapUnderTest.getWidth();
-		int heightOriginal = mBitmapUnderTest.getHeight();
-		mResizeCoordinateXLeft = -1;
-		mResizeCoordinateYTop = -1;
-		mResizeCoordinateXRight = mBitmapUnderTest.getWidth();
-		mResizeCoordinateYBottom = mBitmapUnderTest.getHeight();
-		mCommandUnderTest = new ResizeCommand(mResizeCoordinateXLeft, mResizeCoordinateYTop,
-				mResizeCoordinateXRight, mResizeCoordinateYBottom, mMaximumBitmapResolution);
-		mCommandUnderTest.run(mCanvasUnderTest, mCanvasBitmapUnderTest);
-		Thread.sleep(100);
+	public void testIfBitmapIsEnlarged() {
+		int widthOriginal = bitmapUnderTest.getWidth();
+		int heightOriginal = bitmapUnderTest.getHeight();
+		resizeCoordinateXLeft = -1;
+		resizeCoordinateYTop = -1;
+		resizeCoordinateXRight = bitmapUnderTest.getWidth();
+		resizeCoordinateYBottom = bitmapUnderTest.getHeight();
+		commandUnderTest = new ResizeCommand(resizeCoordinateXLeft, resizeCoordinateYTop,
+				resizeCoordinateXRight, resizeCoordinateYBottom, maximumBitmapResolution);
 
-		File fileToCroppedBitmap = (File) PrivateAccess.getMemberValue(BaseCommand.class, mCommandUnderTest,
-				"mFileToStoredBitmap");
-		if (fileToCroppedBitmap == null) {
-			fail("failed to store cropped bitmap");
-		}
+		commandUnderTest.run(canvasUnderTest, layerUnderTest);
 
-		Bitmap enlargedBitmap = BitmapFactory.decodeFile(fileToCroppedBitmap.getAbsolutePath());
-		fileToCroppedBitmap.delete();
-		assertEquals("Enlarging failed, width not correct ", widthOriginal - mResizeCoordinateXLeft
-				- (widthOriginal - (mResizeCoordinateXRight + 1)), enlargedBitmap.getWidth());
-		assertEquals("Enlarging failed, height not correct ", heightOriginal - mResizeCoordinateYTop
-				- (widthOriginal - (mResizeCoordinateYBottom + 1)), enlargedBitmap.getHeight());
+		Bitmap enlargedBitmap = layerUnderTest.getImage();
+		assertEquals("Enlarging failed, width not correct ", widthOriginal - resizeCoordinateXLeft
+				- (widthOriginal - (resizeCoordinateXRight + 1)), enlargedBitmap.getWidth());
+		assertEquals("Enlarging failed, height not correct ", heightOriginal - resizeCoordinateYTop
+				- (widthOriginal - (resizeCoordinateYBottom + 1)), enlargedBitmap.getHeight());
 		enlargedBitmap.recycle();
-		enlargedBitmap = null;
-
 	}
 
 	@Test
-	public void testIfBitmapIsShifted() throws InterruptedException, SecurityException, IllegalArgumentException,
-			NoSuchFieldException, IllegalAccessException {
-		int widthOriginal = mBitmapUnderTest.getWidth();
-		int heightOriginal = mBitmapUnderTest.getHeight();
-		mResizeCoordinateXLeft = mBitmapUnderTest.getWidth() / 2 - 1;
-		mResizeCoordinateYTop = mBitmapUnderTest.getHeight() / 2 - 1;
-		mResizeCoordinateXRight = mResizeCoordinateXLeft + mBitmapUnderTest.getWidth() - 1;
-		mResizeCoordinateYBottom = mResizeCoordinateYTop + mBitmapUnderTest.getHeight() - 1;
-		mCommandUnderTest = new ResizeCommand(mResizeCoordinateXLeft, mResizeCoordinateYTop,
-				mResizeCoordinateXRight, mResizeCoordinateYBottom, mMaximumBitmapResolution);
-		mCommandUnderTest.run(mCanvasUnderTest, mCanvasBitmapUnderTest);
-		Thread.sleep(100);
+	public void testIfBitmapIsShifted() {
+		int widthOriginal = bitmapUnderTest.getWidth();
+		int heightOriginal = bitmapUnderTest.getHeight();
+		resizeCoordinateXLeft = bitmapUnderTest.getWidth() / 2 - 1;
+		resizeCoordinateYTop = bitmapUnderTest.getHeight() / 2 - 1;
+		resizeCoordinateXRight = resizeCoordinateXLeft + bitmapUnderTest.getWidth() - 1;
+		resizeCoordinateYBottom = resizeCoordinateYTop + bitmapUnderTest.getHeight() - 1;
+		commandUnderTest = new ResizeCommand(resizeCoordinateXLeft, resizeCoordinateYTop,
+				resizeCoordinateXRight, resizeCoordinateYBottom, maximumBitmapResolution);
 
-		File fileToCroppedBitmap = (File) PrivateAccess.getMemberValue(BaseCommand.class, mCommandUnderTest,
-				"mFileToStoredBitmap");
-		if (fileToCroppedBitmap == null) {
-			fail("failed to store cropped bitmap");
-		}
+		commandUnderTest.run(canvasUnderTest, layerUnderTest);
 
-		Bitmap enlargedBitmap = BitmapFactory.decodeFile(fileToCroppedBitmap.getAbsolutePath());
-		fileToCroppedBitmap.delete();
+		Bitmap enlargedBitmap = layerUnderTest.getImage();
 		assertEquals("Enlarging failed, width not correct ", widthOriginal, enlargedBitmap.getWidth());
 		assertEquals("Enlarging failed, height not correct ", heightOriginal, enlargedBitmap.getHeight());
 		enlargedBitmap.recycle();
-		enlargedBitmap = null;
-
 	}
 
 	@Test
-	public void testIfMaximumResolutionIsRespected() throws InterruptedException, SecurityException, IllegalArgumentException,
-			NoSuchFieldException, IllegalAccessException {
-		int widthOriginal = mBitmapUnderTest.getWidth();
-		int heightOriginal = mBitmapUnderTest.getHeight();
-		mCommandUnderTest = new ResizeCommand(0, 0, widthOriginal * 2, heightOriginal * 2, mMaximumBitmapResolution);
-		mCommandUnderTest.run(mCanvasUnderTest, mCanvasBitmapUnderTest);
-		Thread.sleep(50);
-		File fileToCroppedBitmap = (File) PrivateAccess.getMemberValue(BaseCommand.class, mCommandUnderTest,
-				"mFileToStoredBitmap");
-		if (fileToCroppedBitmap != null) {
-			fileToCroppedBitmap.delete();
-			fail("bitmap must not be created if bitmap resolution would get too high");
-		}
+	public void testIfMaximumResolutionIsRespected() {
+		int widthOriginal = bitmapUnderTest.getWidth();
+		int heightOriginal = bitmapUnderTest.getHeight();
+		commandUnderTest = new ResizeCommand(0, 0, widthOriginal * 2, heightOriginal * 2, maximumBitmapResolution);
 
+		commandUnderTest.run(canvasUnderTest, layerUnderTest);
+
+		assertEquals("Width should not have changed", widthOriginal, layerUnderTest.getImage().getWidth());
+		assertEquals("Height should not have changed", heightOriginal, layerUnderTest.getImage().getHeight());
 	}
 
 	@Test
-	public void testIfBitmapIsNotResizedWithInvalidBounds() throws InterruptedException, SecurityException,
-			IllegalArgumentException, NoSuchFieldException, IllegalAccessException {
-		mCommandUnderTest = new ResizeCommand(mBitmapUnderTest.getWidth(), 0, mBitmapUnderTest.getWidth(),
-				0, mMaximumBitmapResolution);
-		mCommandUnderTest.run(mCanvasUnderTest, mCanvasBitmapUnderTest);
-		Thread.sleep(50);
-		File fileToCroppedBitmap = (File) PrivateAccess.getMemberValue(BaseCommand.class, mCommandUnderTest,
-				"mFileToStoredBitmap");
-		if (fileToCroppedBitmap != null) {
-			fileToCroppedBitmap.delete();
-			fail("bitmap must not be created if X left is larger than bitmap scope");
-		}
+	public void testIfBitmapIsNotResizedWithInvalidBounds() {
+		Bitmap originalBitmap = layerUnderTest.getImage();
+		commandUnderTest = new ResizeCommand(bitmapUnderTest.getWidth(), 0, bitmapUnderTest.getWidth(),
+				0, maximumBitmapResolution);
 
-		mCommandUnderTest = new ResizeCommand(-1, 0, -1, 0, mMaximumBitmapResolution);
-		mCommandUnderTest.run(mCanvasUnderTest, mCanvasBitmapUnderTest);
-		Thread.sleep(50);
-		fileToCroppedBitmap = (File) PrivateAccess.getMemberValue(BaseCommand.class, mCommandUnderTest,
-				"mFileToStoredBitmap");
-		if (fileToCroppedBitmap != null) {
-			fileToCroppedBitmap.delete();
-			fail("bitmap must not be created if X right is smaller than bitmap scope");
-		}
+		commandUnderTest.run(canvasUnderTest, layerUnderTest);
+		assertTrue("bitmap must not change if X left is larger than bitmap scope", originalBitmap.sameAs(layerUnderTest.getImage()));
 
-		mCommandUnderTest = new ResizeCommand(0, mBitmapUnderTest.getHeight(), 0,
-				mBitmapUnderTest.getHeight(), mMaximumBitmapResolution);
-		mCommandUnderTest.run(mCanvasUnderTest, mCanvasBitmapUnderTest);
-		Thread.sleep(50);
-		fileToCroppedBitmap = (File) PrivateAccess.getMemberValue(BaseCommand.class, mCommandUnderTest,
-				"mFileToStoredBitmap");
-		if (fileToCroppedBitmap != null) {
-			fileToCroppedBitmap.delete();
-			fail("bitmap must not be created if Y top is larger than bitmap scope");
-		}
+		commandUnderTest = new ResizeCommand(-1, 0, -1, 0, maximumBitmapResolution);
+		commandUnderTest.run(canvasUnderTest, layerUnderTest);
+		assertTrue("bitmap must not change if X right is smaller than bitmap scope", originalBitmap.sameAs(layerUnderTest.getImage()));
 
-		mCommandUnderTest = new ResizeCommand(0, -1, 0, -1, mMaximumBitmapResolution);
-		mCommandUnderTest.run(mCanvasUnderTest, mCanvasBitmapUnderTest);
-		Thread.sleep(50);
-		fileToCroppedBitmap = (File) PrivateAccess.getMemberValue(BaseCommand.class, mCommandUnderTest,
-				"mFileToStoredBitmap");
-		if (fileToCroppedBitmap != null) {
-			fileToCroppedBitmap.delete();
-			fail("bitmap must not be created if Y bottom is smaller than bitmap scope");
-		}
+		commandUnderTest = new ResizeCommand(0, bitmapUnderTest.getHeight(), 0,
+				bitmapUnderTest.getHeight(), maximumBitmapResolution);
+		commandUnderTest.run(canvasUnderTest, layerUnderTest);
+		assertTrue("bitmap must not change if Y top is larger than bitmap scope", originalBitmap.sameAs(layerUnderTest.getImage()));
 
-		mCommandUnderTest = new ResizeCommand(1, 0, 0, 0, mMaximumBitmapResolution);
-		mCommandUnderTest.run(mCanvasUnderTest, mCanvasBitmapUnderTest);
-		Thread.sleep(50);
-		fileToCroppedBitmap = (File) PrivateAccess.getMemberValue(BaseCommand.class, mCommandUnderTest,
-				"mFileToStoredBitmap");
-		if (fileToCroppedBitmap != null) {
-			fileToCroppedBitmap.delete();
-			fail("bitmap must not be created with widthXRight < widthXLeft bound");
-		}
+		commandUnderTest = new ResizeCommand(0, -1, 0, -1, maximumBitmapResolution);
+		commandUnderTest.run(canvasUnderTest, layerUnderTest);
+		assertTrue("bitmap must not change if Y bottom is smaller than bitmap scope", originalBitmap.sameAs(layerUnderTest.getImage()));
 
-		mCommandUnderTest = new ResizeCommand(0, 1, 0, 0, mMaximumBitmapResolution);
-		mCommandUnderTest.run(mCanvasUnderTest, mCanvasBitmapUnderTest);
-		Thread.sleep(50);
-		fileToCroppedBitmap = (File) PrivateAccess.getMemberValue(BaseCommand.class, mCommandUnderTest,
-				"mFileToStoredBitmap");
-		if (fileToCroppedBitmap != null) {
-			fileToCroppedBitmap.delete();
-			fail("bitmap must not be created with widthYBottom < widthYTop bound");
-		}
+		commandUnderTest = new ResizeCommand(1, 0, 0, 0, maximumBitmapResolution);
+		commandUnderTest.run(canvasUnderTest, layerUnderTest);
+		assertTrue("bitmap must not change with widthXRight < widthXLeft bound", originalBitmap.sameAs(layerUnderTest.getImage()));
 
-		mCommandUnderTest = new ResizeCommand(0, 0, mBitmapUnderTest.getWidth() - 1,
-				mBitmapUnderTest.getHeight() - 1, mMaximumBitmapResolution);
-		mCommandUnderTest.run(mCanvasUnderTest, mCanvasBitmapUnderTest);
-		Thread.sleep(50);
-		fileToCroppedBitmap = (File) PrivateAccess.getMemberValue(BaseCommand.class, mCommandUnderTest,
-				"mFileToStoredBitmap");
-		if (fileToCroppedBitmap != null) {
-			fileToCroppedBitmap.delete();
-			fail("bitmap must not be created because bounds are the same as original bitmap");
-		}
+		commandUnderTest = new ResizeCommand(0, 1, 0, 0, maximumBitmapResolution);
+		commandUnderTest.run(canvasUnderTest, layerUnderTest);
+		assertTrue("bitmap must not change with widthYBottom < widthYTop bound", originalBitmap.sameAs(layerUnderTest.getImage()));
 
+		commandUnderTest = new ResizeCommand(0, 0, bitmapUnderTest.getWidth() - 1,
+				bitmapUnderTest.getHeight() - 1, maximumBitmapResolution);
+		commandUnderTest.run(canvasUnderTest, layerUnderTest);
+		assertTrue("bitmap must not change because bounds are the same as original bitmap", originalBitmap.sameAs(layerUnderTest.getImage()));
 	}
 }

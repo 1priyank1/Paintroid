@@ -1,6 +1,23 @@
-package org.catrobat.paintroid.command.implementation;
+/**
+ *  Paintroid: An image manipulation application for Android.
+ *  Copyright (C) 2010-2015 The Catrobat Team
+ *  (<http://developer.catrobat.org/credits>)
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU Affero General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-import org.catrobat.paintroid.PaintroidApplication;
+package org.catrobat.paintroid.command.implementation;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -8,47 +25,51 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.util.Log;
 
+import org.catrobat.paintroid.PaintroidApplication;
+import org.catrobat.paintroid.tools.Layer;
+
 public class RotateCommand extends BaseCommand {
+	private static final String TAG = RotateCommand.class.getSimpleName();
 
-	private final static float ANGLE = 90;
-	private RotateDirection mRotateDirection;
-
-	public static enum RotateDirection {
-		ROTATE_LEFT, ROTATE_RIGHT
-	};
+	private static final float ANGLE = 90;
+	private RotateDirection rotateDirection;
 
 	public RotateCommand(RotateDirection rotateDirection) {
-		mRotateDirection = rotateDirection;
+		this.rotateDirection = rotateDirection;
 	}
 
 	@Override
-	public void run(Canvas canvas, Bitmap bitmap) {
+	public void run(Canvas canvas, Layer layer) {
+		Bitmap bitmap = layer.getImage();
+
 		setChanged();
-		notifyStatus(NOTIFY_STATES.COMMAND_STARTED);
-		if (mRotateDirection == null) {
+		notifyStatus(NotifyStates.COMMAND_STARTED);
+		if (rotateDirection == null) {
 			setChanged();
-			notifyStatus(NOTIFY_STATES.COMMAND_FAILED);
+			notifyStatus(NotifyStates.COMMAND_FAILED);
 			return;
 		}
 
 		Matrix rotateMatrix = new Matrix();
 
-		switch (mRotateDirection) {
-		case ROTATE_RIGHT:
-			rotateMatrix.postRotate(ANGLE);
-			Log.i(PaintroidApplication.TAG, "rotate right");
-			break;
+		switch (rotateDirection) {
+			case ROTATE_RIGHT:
+				rotateMatrix.postRotate(ANGLE);
+				Log.i(TAG, "rotate right");
+				break;
 
-		case ROTATE_LEFT:
-			rotateMatrix.postRotate(-ANGLE);
-			Log.i(PaintroidApplication.TAG, "rotate left");
-			break;
+			case ROTATE_LEFT:
+				rotateMatrix.postRotate(-ANGLE);
+				Log.i(TAG, "rotate left");
+				break;
 
-		default:
-			setChanged();
-			notifyStatus(NOTIFY_STATES.COMMAND_FAILED);
-			return;
+			default:
+				setChanged();
+				notifyStatus(NotifyStates.COMMAND_FAILED);
+				return;
 		}
+
+		rotateMatrix.postTranslate(-bitmap.getWidth() / 2, -bitmap.getHeight() / 2);
 
 		Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0,
 				bitmap.getWidth(), bitmap.getHeight(), rotateMatrix, true);
@@ -56,14 +77,19 @@ public class RotateCommand extends BaseCommand {
 
 		rotateCanvas.drawBitmap(bitmap, rotateMatrix, new Paint());
 
-		if (PaintroidApplication.drawingSurface != null) {
-			PaintroidApplication.drawingSurface.setBitmap(rotatedBitmap);
-		}
+		layer.setImage(rotatedBitmap);
 
 		setChanged();
 
 		PaintroidApplication.perspective.resetScaleAndTranslation();
-		notifyStatus(NOTIFY_STATES.COMMAND_DONE);
+		notifyStatus(NotifyStates.COMMAND_DONE);
+	}
 
+	public RotateDirection getRotateDirection() {
+		return rotateDirection;
+	}
+
+	public enum RotateDirection {
+		ROTATE_LEFT, ROTATE_RIGHT
 	}
 }

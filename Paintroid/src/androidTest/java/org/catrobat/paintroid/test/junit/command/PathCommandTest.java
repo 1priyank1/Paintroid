@@ -19,92 +19,89 @@
 
 package org.catrobat.paintroid.test.junit.command;
 
-import java.util.Observable;
-import java.util.Observer;
+import android.graphics.Path;
+import android.graphics.RectF;
 
 import org.catrobat.paintroid.command.Command;
 import org.catrobat.paintroid.command.implementation.BaseCommand;
 import org.catrobat.paintroid.command.implementation.PathCommand;
+import org.catrobat.paintroid.test.utils.PaintroidAsserts;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import android.graphics.Path;
-import android.graphics.RectF;
+import java.util.Observable;
+import java.util.Observer;
+
+import static org.junit.Assert.assertTrue;
 
 public class PathCommandTest extends CommandTestSetup {
 
-	protected Path mPathUnderTest;
+	private Path pathUnderTest;
 
 	@Override
 	@Before
-	protected void setUp() throws Exception {
+	public void setUp() {
 		super.setUp();
-		mPathUnderTest = new Path();
-		mPathUnderTest.moveTo(0, 0);
-		mPathUnderTest.quadTo(0, 5, 0, 9);
-		mPathUnderTest.lineTo(0, mCanvasBitmapUnderTest.getHeight());
-		mCommandUnderTest = new PathCommand(mPaintUnderTest, mPathUnderTest);
+		pathUnderTest = new Path();
+		pathUnderTest.moveTo(1, 0);
+		pathUnderTest.lineTo(1, canvasBitmapUnderTest.getHeight());
+		commandUnderTest = new PathCommand(paintUnderTest, pathUnderTest);
 	}
 
 	@Override
 	@After
-	protected void tearDown() throws Exception {
+	public void tearDown() {
 		super.tearDown();
-		mPathUnderTest.reset();
-		mPathUnderTest = null;
+		pathUnderTest.reset();
+		pathUnderTest = null;
 	}
 
 	@Test
-	public void testPathOutOfBounds() throws SecurityException, IllegalArgumentException, NoSuchFieldException,
-			IllegalAccessException {
+	public void testPathOutOfBounds() {
 		Path path = new Path();
 
-		float left = mCanvasBitmapUnderTest.getWidth() + 50;
-		float top = mCanvasBitmapUnderTest.getHeight() + 50;
-		float right = mCanvasBitmapUnderTest.getWidth() + 100;
-		float bottom = mCanvasBitmapUnderTest.getHeight() + 100;
+		float left = canvasBitmapUnderTest.getWidth() + 50;
+		float top = canvasBitmapUnderTest.getHeight() + 50;
+		float right = canvasBitmapUnderTest.getWidth() + 100;
+		float bottom = canvasBitmapUnderTest.getHeight() + 100;
 		path.addRect(new RectF(left, top, right, bottom), Path.Direction.CW);
 
-		mCommandUnderTest = new PathCommand(mPaintUnderTest, path);
+		commandUnderTest = new PathCommand(paintUnderTest, path);
 
 		CommandManagerMockup commandManagerMockup = new CommandManagerMockup();
-		commandManagerMockup.testCommand(mCommandUnderTest);
-		mCommandUnderTest.run(mCanvasUnderTest, null);
+		commandManagerMockup.testCommand(commandUnderTest);
+		commandUnderTest.run(canvasUnderTest, null);
 
-		assertEquals("Pathcommand should have failed but didnt get deleted", commandManagerMockup.gotDeleted, true);
+		assertTrue("PathCommand should have failed but didn't get deleted", commandManagerMockup.gotDeleted);
 	}
 
-	// @Test
-	// @Ignore("library test")
-	// public void testRun() {
-	// int color = mPaintUnderTest.getColor();
-	// int height = mBitmapUnderTest.getHeight();
-	//
-	// for (int heightIndex = 0; heightIndex < height; heightIndex++) {
-	// mBitmapUnderTest.setPixel(0, heightIndex, color);
-	// }
-	// mCommandUnderTest.run(mCanvasUnderTest, null);
-	// PaintroidAsserts.assertBitmapEquals(mBitmapUnderTest, mCanvasBitmapUnderTest);
-	// }
+	@Test
+	public void testRun() {
+		int color = paintUnderTest.getColor();
+		int height = bitmapUnderTest.getHeight();
+
+		for (int heightIndex = 0; heightIndex < height; heightIndex++) {
+			bitmapUnderTest.setPixel(1, heightIndex, color);
+		}
+		commandUnderTest.run(canvasUnderTest, null);
+		PaintroidAsserts.assertBitmapEquals(bitmapUnderTest, canvasBitmapUnderTest);
+	}
 
 	private class CommandManagerMockup implements Observer {
-		public boolean gotDeleted = false;
+		boolean gotDeleted = false;
 
-		public void testCommand(Command command) {
+		void testCommand(Command command) {
 			((BaseCommand) command).addObserver(this);
 		}
 
 		@Override
 		public void update(Observable observable, Object data) {
-			if (data instanceof BaseCommand.NOTIFY_STATES) {
-				if (BaseCommand.NOTIFY_STATES.COMMAND_FAILED == data) {
-					if (observable instanceof Command) {
-						gotDeleted = true;
-					}
-				}
+			if (data instanceof BaseCommand.NotifyStates
+					&& BaseCommand.NotifyStates.COMMAND_FAILED == data
+					&& observable instanceof Command) {
+				gotDeleted = true;
 			}
 		}
-
 	}
 }

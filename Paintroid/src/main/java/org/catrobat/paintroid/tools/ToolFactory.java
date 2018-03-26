@@ -19,63 +19,66 @@
 
 package org.catrobat.paintroid.tools;
 
-import org.catrobat.paintroid.tools.implementation.ResizeTool;
+import android.app.Activity;
+
 import org.catrobat.paintroid.tools.implementation.CursorTool;
 import org.catrobat.paintroid.tools.implementation.DrawTool;
 import org.catrobat.paintroid.tools.implementation.EraserTool;
 import org.catrobat.paintroid.tools.implementation.FillTool;
-import org.catrobat.paintroid.tools.implementation.FlipTool;
 import org.catrobat.paintroid.tools.implementation.GeometricFillTool;
 import org.catrobat.paintroid.tools.implementation.ImportTool;
 import org.catrobat.paintroid.tools.implementation.LineTool;
-import org.catrobat.paintroid.tools.implementation.MoveZoomTool;
 import org.catrobat.paintroid.tools.implementation.PipetteTool;
-import org.catrobat.paintroid.tools.implementation.RotationTool;
 import org.catrobat.paintroid.tools.implementation.StampTool;
 import org.catrobat.paintroid.tools.implementation.TextTool;
+import org.catrobat.paintroid.tools.implementation.TransformTool;
 
-import android.app.Activity;
+public final class ToolFactory {
 
-public class ToolFactory {
-
-	public static Tool createTool(Activity context, ToolType toolType) {
-		switch (toolType) {
-		case BRUSH:
-			return new DrawTool(context, toolType);
-		case CURSOR:
-			return new CursorTool(context, toolType);
-		case ELLIPSE:
-			return new GeometricFillTool(context, toolType);
-		case STAMP:
-			return new StampTool(context, toolType);
-		case IMPORTPNG:
-			return new ImportTool(context, toolType);
-		case PIPETTE:
-			return new PipetteTool(context, toolType);
-		case FILL:
-			return new FillTool(context, toolType);
-		case RESIZE:
-			return new ResizeTool(context, toolType);
-		case RECT:
-			return new GeometricFillTool(context, toolType);
-		case ERASER:
-			return new EraserTool(context, toolType);
-		case FLIP:
-			return new FlipTool(context, toolType);
-		case LINE:
-			return new LineTool(context, toolType);
-		case MOVE:
-		case ZOOM:
-			return new MoveZoomTool(context, toolType);
-		case ROTATE:
-			return new RotationTool(context, toolType);
-		case TEXT:
-			return new TextTool(context, toolType);
-		default:
-			break;
-		}
-		return new DrawTool(context, ToolType.BRUSH);
-
+	private ToolFactory() {
 	}
 
+	public static Tool createTool(Activity context, ToolType toolType) {
+		Tool tool;
+		switch (toolType) {
+			case BRUSH:
+				tool = new DrawTool(context, toolType);
+				break;
+			case CURSOR:
+				tool = new CursorTool(context, toolType);
+				break;
+			case STAMP:
+				tool = new StampTool(context, toolType);
+				break;
+			case IMPORTPNG:
+				tool = new ImportTool(context, toolType);
+				break;
+			case PIPETTE:
+				tool = new PipetteTool(context, toolType);
+				break;
+			case FILL:
+				tool = new FillTool(context, toolType);
+				break;
+			case TRANSFORM:
+				tool = new TransformTool(context, toolType);
+				break;
+			case SHAPE:
+				tool = new GeometricFillTool(context, toolType);
+				break;
+			case ERASER:
+				tool = new EraserTool(context, toolType);
+				break;
+			case LINE:
+				tool = new LineTool(context, toolType);
+				break;
+			case TEXT:
+				tool = new TextTool(context, toolType);
+				break;
+			default:
+				tool = new DrawTool(context, ToolType.BRUSH);
+				break;
+		}
+		tool.setupToolOptions();
+		return tool;
+	}
 }

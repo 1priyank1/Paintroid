@@ -19,97 +19,61 @@
 
 package org.catrobat.paintroid.tools.implementation;
 
-import org.catrobat.paintroid.PaintroidApplication;
-import org.catrobat.paintroid.tools.ToolType;
-import org.catrobat.paintroid.ui.TopBar.ToolButtonIDs;
-
+import android.app.Activity;
 import android.content.Context;
-import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PointF;
+import android.support.annotation.ColorInt;
+import android.support.annotation.VisibleForTesting;
+import android.view.View;
+
+import org.catrobat.paintroid.R;
+import org.catrobat.paintroid.tools.ToolType;
+import org.catrobat.paintroid.ui.button.ColorButton;
 
 public class EraserTool extends DrawTool {
 
-	protected Paint mPreviousPaint;
+	@VisibleForTesting
+	public ColorButton colorButton;
+	private View colorPickerPalette;
+	@ColorInt
+	private int previousColor;
 
 	public EraserTool(Context context, ToolType toolType) {
 		super(context, toolType);
 
-		mPreviousPaint = new Paint(
-				PaintroidApplication.currentTool.getDrawPaint());
-
-		changePaintColor(Color.TRANSPARENT);
-
-		mCanvasPaint.setStrokeCap(mPreviousPaint.getStrokeCap());
-		mCanvasPaint.setStrokeWidth(mPreviousPaint.getStrokeWidth());
-
+		previousColor = Color.MAGENTA;
+		displayEraserInsteadOfSelectedColor();
 	}
 
-	@Override
-	public void draw(Canvas canvas) {
-		super.draw(canvas);
-	}
+	private void displayEraserInsteadOfSelectedColor() {
+		colorButton = (ColorButton) ((Activity) context).findViewById(R.id.btn_top_color);
+		colorButton.setImageResource(R.drawable.icon_menu_eraser);
 
-	@Override
-	public boolean handleDown(PointF coordinate) {
-		return (super.handleDown(coordinate));
-	}
+		colorPickerPalette = ((Activity) context).findViewById(R.id.btn_top_color_palette);
+		colorPickerPalette.setVisibility(View.INVISIBLE);
 
-	@Override
-	public int getAttributeButtonResource(ToolButtonIDs buttonNumber) {
-		switch (buttonNumber) {
-		case BUTTON_ID_PARAMETER_BOTTOM_2:
-			return NO_BUTTON_RESOURCE;
-		default:
-			return super.getAttributeButtonResource(buttonNumber);
-		}
-	}
-
-	@Override
-	public int getAttributeButtonColor(ToolButtonIDs buttonNumber) {
-		switch (buttonNumber) {
-		case BUTTON_ID_TOOL:
-		case BUTTON_ID_PARAMETER_TOP:
-			return super.getAttributeButtonColor(buttonNumber);
-		default:
-			return Color.TRANSPARENT;
-		}
-	}
-
-	@Override
-	public void attributeButtonClick(ToolButtonIDs buttonNumber) {
-		switch (buttonNumber) {
-		case BUTTON_ID_PARAMETER_BOTTOM_1:
-			super.attributeButtonClick(buttonNumber);
-		default:
-			break;
-		}
-	}
-
-	@Override
-	public boolean handleMove(PointF coordinate) {
-		return (super.handleMove(coordinate));
-	}
-
-	@Override
-	public boolean handleUp(PointF coordinate) {
-		return (super.handleUp(coordinate));
-	}
-
-	@Override
-	public void resetInternalState(StateChange stateChange) {
-		super.resetInternalState(stateChange);
+		colorButton.setDrawSelectedColor(false);
 	}
 
 	@Override
 	public Paint getDrawPaint() {
-		return new Paint(this.mPreviousPaint);
+		Paint paint = super.getDrawPaint();
+		paint.setColor(previousColor);
+		return paint;
 	}
 
 	@Override
 	public void setDrawPaint(Paint paint) {
-		changePaintColor(Color.TRANSPARENT);
-		// previous paint object has already been saved in constructor
+		super.setDrawPaint(paint);
+		previousColor = paint.getColor();
+	}
+
+	@Override
+	public void leaveTool() {
+		super.leaveTool();
+		colorButton.resetDrawSelectedColor();
+		colorButton.setImageResource(0);
+		colorPickerPalette.setVisibility(View.VISIBLE);
 	}
 }

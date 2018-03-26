@@ -45,9 +45,12 @@ public class HSVSelectorView extends LinearLayout {
 				ViewGroup.LayoutParams.MATCH_PARENT));
 		addView(hsvColorPickerView);
 	}
+
 	public HSVColorPickerView getHsvColorPickerView() {
 		return hsvColorPickerView;
 	}
 
-
+	public void setSelectedColor(int color) {
+		hsvColorPickerView.setSelectedColor(color);
+	}
 }

@@ -19,42 +19,41 @@
 
 package org.catrobat.paintroid.test.junit.command;
 
-import org.catrobat.paintroid.PaintroidApplication;
 import org.catrobat.paintroid.command.implementation.FlipCommand;
 import org.catrobat.paintroid.command.implementation.FlipCommand.FlipDirection;
-import org.catrobat.paintroid.test.junit.stubs.DrawingSurfaceStub;
 import org.junit.Before;
+import org.junit.Test;
 
-import android.graphics.PointF;
+import static org.junit.Assert.assertEquals;
 
 public class FlipCommandTest extends CommandTestSetup {
 
-	private int mBitmapHeigt;
-	private int mBitmapWidth;
+	private int bitmapHeight;
+	private int bitmapWidth;
 
 	@Override
 	@Before
-	protected void setUp() throws Exception {
+	public void setUp() {
 		super.setUp();
-		mBitmapHeigt = mBitmapUnderTest.getHeight();
-		mBitmapWidth = mBitmapUnderTest.getWidth();
-		PaintroidApplication.drawingSurface = new DrawingSurfaceStub(getContext());
+		bitmapHeight = bitmapUnderTest.getHeight();
+		bitmapWidth = bitmapUnderTest.getWidth();
 	}
 
+	@Test
 	public void testVerticalFlip() {
-		mCommandUnderTest = new FlipCommand(FlipDirection.FLIP_VERTICAL);
-		mBitmapUnderTest.setPixel(0, mBitmapHeigt / 2, PAINT_BASE_COLOR);
-		mCommandUnderTest.run(mCanvasUnderTest, mBitmapUnderTest);
-		int pixel = PaintroidApplication.drawingSurface.getPixel(new PointF(mBitmapWidth - 1, mBitmapWidth / 2));
+		commandUnderTest = new FlipCommand(FlipDirection.FLIP_VERTICAL);
+		bitmapUnderTest.setPixel(0, bitmapHeight / 2, PAINT_BASE_COLOR);
+		commandUnderTest.run(canvasUnderTest, layerUnderTest);
+		int pixel = bitmapUnderTest.getPixel(bitmapWidth - 1, bitmapWidth / 2);
 		assertEquals("pixel should be paint_base_color", PAINT_BASE_COLOR, pixel);
 	}
 
+	@Test
 	public void testHorizontalFlip() {
-		mCommandUnderTest = new FlipCommand(FlipDirection.FLIP_HORIZONTAL);
-		mBitmapUnderTest.setPixel(mBitmapWidth / 2, 0, PAINT_BASE_COLOR);
-		mCommandUnderTest.run(mCanvasUnderTest, mBitmapUnderTest);
-		int pixel = PaintroidApplication.drawingSurface.getPixel(new PointF(mBitmapWidth / 2, mBitmapWidth - 1));
+		commandUnderTest = new FlipCommand(FlipDirection.FLIP_HORIZONTAL);
+		bitmapUnderTest.setPixel(bitmapWidth / 2, 0, PAINT_BASE_COLOR);
+		commandUnderTest.run(canvasUnderTest, layerUnderTest);
+		int pixel = bitmapUnderTest.getPixel(bitmapWidth / 2, bitmapWidth - 1);
 		assertEquals("pixel should be paint_base_color", PAINT_BASE_COLOR, pixel);
 	}
-
 }

@@ -19,19 +19,23 @@
 
 package org.catrobat.paintroid.tools.implementation;
 
-import org.catrobat.paintroid.PaintroidApplication;
-import org.catrobat.paintroid.dialog.colorpicker.ColorPickerDialog;
-import org.catrobat.paintroid.tools.ToolType;
-import org.catrobat.paintroid.ui.TopBar.ToolButtonIDs;
-
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.PointF;
 
+import org.catrobat.paintroid.dialog.colorpicker.ColorPickerDialog;
+import org.catrobat.paintroid.listener.LayerListener;
+import org.catrobat.paintroid.tools.ToolType;
+
 public class PipetteTool extends BaseTool {
+
+	private Bitmap surfaceBitmap;
 
 	public PipetteTool(Context context, ToolType toolType) {
 		super(context, toolType);
+
+		updateSurfaceBitmap();
 	}
 
 	@Override
@@ -54,40 +58,32 @@ public class PipetteTool extends BaseTool {
 	}
 
 	protected boolean setColor(PointF coordinate) {
-		if (coordinate == null) {
+		if (coordinate == null || surfaceBitmap == null) {
 			return false;
 		}
-		int color = PaintroidApplication.drawingSurface.getPixel(coordinate);
+
+		if (coordinate.x < 0 || coordinate.y < 0
+				|| coordinate.x >= surfaceBitmap.getWidth() || coordinate.y >= surfaceBitmap.getHeight()) {
+			return false;
+		}
+
+		int color = surfaceBitmap.getPixel((int) coordinate.x, (int) coordinate.y);
+
 		ColorPickerDialog.getInstance().setInitialColor(color);
 		changePaintColor(color);
 		return true;
 	}
 
-	@Override
-	public int getAttributeButtonResource(ToolButtonIDs buttonNumber) {
-
-		switch (buttonNumber) {
-		case BUTTON_ID_PARAMETER_TOP:
-			return getStrokeColorResource();
-		default:
-			return super.getAttributeButtonResource(buttonNumber);
-		}
-	}
-
-	@Override
-	public int getAttributeButtonColor(ToolButtonIDs buttonNumber) {
-
-		return super.getAttributeButtonColor(buttonNumber);
-
+	public void updateSurfaceBitmap() {
+		surfaceBitmap = LayerListener.getInstance().getBitmapOfAllLayersToSave();
 	}
 
 	@Override
 	public void resetInternalState() {
+		updateSurfaceBitmap();
 	}
 
 	@Override
-	public void attributeButtonClick(ToolButtonIDs buttonNumber) {
-		// no clicks allowed
+	public void setupToolOptions() {
 	}
-
 }

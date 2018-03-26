@@ -1,27 +1,23 @@
 /**
- *  Paintroid: An image manipulation application for Android.
- *  Copyright (C) 2010-2015 The Catrobat Team
- *  (<http://developer.catrobat.org/credits>)
+ * Paintroid: An image manipulation application for Android.
+ * Copyright (C) 2010-2015 The Catrobat Team
+ * (<http://developer.catrobat.org/credits>)
  *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU Affero General Public License as
- *  published by the Free Software Foundation, either version 3 of the
- *  License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package org.catrobat.paintroid.ui.button;
-
-import org.catrobat.paintroid.R;
-import org.catrobat.paintroid.dialog.colorpicker.ColorPickerDialog;
-import org.catrobat.paintroid.dialog.colorpicker.ColorPickerDialog.OnColorPickedListener;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -30,73 +26,89 @@ import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Shader.TileMode;
+import android.support.v7.widget.AppCompatImageButton;
 import android.util.AttributeSet;
-import android.widget.ImageButton;
 
-public class ColorButton extends ImageButton implements OnColorPickedListener {
+import org.catrobat.paintroid.R;
 
-	private static final int RECT_SIDE_LENGTH = 50;
+public class ColorButton extends AppCompatImageButton {
+
+	private static final int RECT_SIDE_LENGTH = 25;
 	private static final int RECT_BORDER_SIZE = 2;
 	private static final int RECT_BORDER_COLOR = Color.LTGRAY;
+	private static final boolean DEFAULT_DRAW_SELECTED_COLOR = true;
 
-	private Paint mColorPaint;
-	private Paint mBorderPaint;
-	private Paint mBackgroundPaint;
-	private Bitmap mBackgroundBitmap;
+	private Paint colorPaint;
+	private Paint borderPaint;
+	private Paint backgroundPaint;
 
-	private int mHeigth;
-	private int mWidth;
+	private RectF rect;
+
+	private boolean drawSelectedColor = DEFAULT_DRAW_SELECTED_COLOR;
 
 	public ColorButton(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		init(context);
+		init();
 	}
 
-	private void init(Context context) {
-		mColorPaint = new Paint();
-		mBackgroundPaint = new Paint();
-		mBorderPaint = new Paint();
-		mBorderPaint.setColor(RECT_BORDER_COLOR);
+	private void init() {
+		colorPaint = new Paint();
+		backgroundPaint = new Paint();
+		borderPaint = new Paint();
+		borderPaint.setColor(RECT_BORDER_COLOR);
+		borderPaint.setStyle(Paint.Style.STROKE);
+		borderPaint.setStrokeWidth(RECT_BORDER_SIZE);
 
-		mBackgroundBitmap = BitmapFactory.decodeResource(getResources(),
+		rect = new RectF();
+
+		Bitmap mBackgroundBitmap = BitmapFactory.decodeResource(getResources(),
 				R.drawable.checkeredbg);
 		BitmapShader backgroundShader = new BitmapShader(mBackgroundBitmap,
 				TileMode.REPEAT, TileMode.REPEAT);
-		mBackgroundPaint.setShader(backgroundShader);
-
-		ColorPickerDialog.getInstance().addOnColorPickedListener(this);
+		backgroundPaint.setShader(backgroundShader);
 	}
 
-	@Override
-	public void colorChanged(int color) {
+	public void resetDrawSelectedColor() {
+		drawSelectedColor = DEFAULT_DRAW_SELECTED_COLOR;
+	}
 
-		mColorPaint.setColor(color);
+	public boolean getDrawSelectedColor() {
+		return drawSelectedColor;
+	}
+
+	public void setDrawSelectedColor(boolean drawSelectedColor) {
+		this.drawSelectedColor = drawSelectedColor;
+	}
+
+	public void colorChanged(int color) {
+		colorPaint.setColor(color);
 		invalidate();
 	}
 
 	@Override
 	public void draw(Canvas canvas) {
-		int rectX = mWidth / 2 - RECT_SIDE_LENGTH / 2;
-		int rectY = mHeigth / 2 - RECT_SIDE_LENGTH / 2;
+		super.draw(canvas);
 
-		Rect colorRect = new Rect(rectX, rectY, rectX + RECT_SIDE_LENGTH, rectY
-				+ RECT_SIDE_LENGTH);
-		Rect borderRect = new Rect(colorRect.left - RECT_BORDER_SIZE,
-				colorRect.top - RECT_BORDER_SIZE, colorRect.right
-						+ RECT_BORDER_SIZE, colorRect.bottom + RECT_BORDER_SIZE);
+		if (!drawSelectedColor) {
+			return;
+		}
 
-		canvas.drawRect(borderRect, mBorderPaint);
-		canvas.drawRect(colorRect, mBackgroundPaint);
-		canvas.drawRect(colorRect, mColorPaint);
+		float density = getResources().getDisplayMetrics().density;
+		float rectSideLengthDp = RECT_SIDE_LENGTH * density;
 
-	}
+		float width = canvas.getWidth();
+		float height = canvas.getHeight();
 
-	@Override
-	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-		mWidth = MeasureSpec.getSize(widthMeasureSpec);
-		mHeigth = MeasureSpec.getSize(heightMeasureSpec);
+		float rectX = (width - rectSideLengthDp) / 2;
+		float rectY = (height - rectSideLengthDp) / 2;
+		rect.set(rectX, rectY, rectX + rectSideLengthDp, rectY + rectSideLengthDp);
+
+		if (Color.alpha(colorPaint.getColor()) != 0xff) {
+			canvas.drawRect(rect, backgroundPaint);
+		}
+		canvas.drawRect(rect, colorPaint);
+		canvas.drawRect(rect, borderPaint);
 	}
 }

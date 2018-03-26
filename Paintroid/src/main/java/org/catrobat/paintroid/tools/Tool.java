@@ -19,54 +19,59 @@
 
 package org.catrobat.paintroid.tools;
 
-import org.catrobat.paintroid.ui.TopBar.ToolButtonIDs;
-
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Cap;
 import android.graphics.Point;
 import android.graphics.PointF;
+import android.os.Bundle;
 
 public interface Tool {
 
-	// standard stroke widths in pixels
-	public static final int stroke1 = 1;
-	public static final int stroke5 = 5;
-	public static final int stroke15 = 15;
-	public static final int stroke25 = 25;
+	boolean handleDown(PointF coordinate);
 
-	public enum StateChange {
+	boolean handleMove(PointF coordinate);
+
+	boolean handleUp(PointF coordinate);
+
+	boolean handleTouch(PointF coordinate, int motionEventType);
+
+	void changePaintColor(int color);
+
+	void changePaintStrokeWidth(int strokeWidth);
+
+	void changePaintStrokeCap(Cap cap);
+
+	Paint getDrawPaint();
+
+	void setDrawPaint(Paint paint);
+
+	void draw(Canvas canvas);
+
+	ToolType getToolType();
+
+	void resetInternalState(StateChange stateChange);
+
+	Point getAutoScrollDirection(float pointX, float pointY,
+			int screenWidth, int screenHeight);
+
+	void hide();
+
+	void toggleShowToolOptions();
+
+	void onSaveInstanceState(Bundle bundle);
+
+	void onRestoreInstanceState(Bundle bundle);
+
+	void setupToolOptions();
+
+	boolean getToolOptionsAreShown();
+
+	void startTool();
+
+	void leaveTool();
+
+	enum StateChange {
 		ALL, RESET_INTERNAL_STATE, NEW_IMAGE_LOADED, MOVE_CANCELED
 	}
-
-	public boolean handleDown(PointF coordinate);
-
-	public boolean handleMove(PointF coordinate);
-
-	public boolean handleUp(PointF coordinate);
-
-	public void changePaintColor(int color);
-
-	public void changePaintStrokeWidth(int strokeWidth);
-
-	public void changePaintStrokeCap(Cap cap);
-
-	public void setDrawPaint(Paint paint);
-
-	public Paint getDrawPaint();
-
-	public void draw(Canvas canvas);
-
-	public ToolType getToolType();
-
-	public int getAttributeButtonResource(ToolButtonIDs buttonNumber);
-
-	public int getAttributeButtonColor(ToolButtonIDs buttonNumber);
-
-	public void attributeButtonClick(ToolButtonIDs buttonNumber);
-
-	public void resetInternalState(StateChange stateChange);
-
-	public Point getAutoScrollDirection(float pointX, float pointY,
-			int screenWidth, int screenHeight);
 }

@@ -19,47 +19,40 @@
 
 package org.catrobat.paintroid.test.junit.stubs;
 
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.support.test.InstrumentationRegistry;
+
+import org.catrobat.paintroid.command.implementation.BaseCommand;
+import org.catrobat.paintroid.tools.Layer;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.catrobat.paintroid.command.implementation.BaseCommand;
-
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-
 public class BaseCommandStub extends BaseCommand {
 
-	protected BaseStub mBaseStub;
+	private BaseStub baseStub;
 
 	public BaseCommandStub() {
 		super();
-		mBaseStub = new BaseStub();
+		baseStub = new BaseStub();
 	}
 
 	public BaseCommandStub(Paint paint) {
 		super(paint);
-		mBaseStub = new BaseStub();
+		baseStub = new BaseStub();
 	}
 
 	@Override
-	public void run(Canvas canvas, Bitmap bitmap) {
+	public void run(Canvas canvas, Layer layer) {
 		Throwable throwable = new Throwable();
-		List<Object> arguments = new ArrayList<Object>();
+		List<Object> arguments = new ArrayList<>();
 		arguments.add(canvas);
-		arguments.add(bitmap);
-		mBaseStub.addCall(throwable, arguments);
-	}
-
-	public int getCallCount(String methodName) {
-		return mBaseStub.getCallCount(methodName);
-	}
-
-	public List<Object> getCall(String methodName, int count) {
-		return mBaseStub.getCall(methodName, count);
+		arguments.add(layer);
+		baseStub.addCall(throwable, arguments);
 	}
 
 	public void storeBitmapStub() {
-		storeBitmap();
+		storeBitmap(InstrumentationRegistry.getTargetContext().getCacheDir());
 	}
 }
